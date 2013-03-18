@@ -36,12 +36,34 @@ import android.os.SystemProperties;
 
 import android.util.DisplayMetrics;
 
+//huyanwei {
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+
+import org.apache.http.util.EncodingUtils;
+//huyanwei }
+import android.os.Build;
+import android.os.SystemProperties;
+
+import android.util.DisplayMetrics;
+
 public class DisplayResolution extends Activity {	
 
     private String TAG = "srclib.huyanwei.display";	
 	
     private TextView m_width_value; 
     private TextView m_height_value;
+    private TextView m_density_value;
 
     private int res = -1 ;
     private int width  = 0 ; 
@@ -49,6 +71,18 @@ public class DisplayResolution extends Activity {
 
     private int android_width  = 0 ; 
     private int android_height = 0 ;
+
+    private float android_density  = 0 ;
+    private int android_density_dpi  = 0 ;
+
+    private float android_scaledDensity = 0;
+    private float android_noncompatDensity = 0;
+    private float android_noncompatScaledDensity = 0;
+
+
+    private int android_width2  = 0 ; 
+    private int android_height2 = 0 ;
+
 	
     /** Called when the activity is first created. */
     @Override
@@ -58,11 +92,22 @@ public class DisplayResolution extends Activity {
         setContentView(R.layout.main);                     
         m_width_value = (TextView)findViewById(R.id.lcm_width_value);
         m_height_value = (TextView)findViewById(R.id.lcm_height_value);
+        m_density_value = (TextView)findViewById(R.id.lcm_density_value);
 
 	DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
 	android_width = dm.widthPixels;
 	android_height = dm.heightPixels;
+
+	android_density = dm.density;
+        android_density_dpi  = dm.densityDpi ;
+
+	android_scaledDensity = dm.scaledDensity;
+	//android_noncompatDensity=dm.noncompatDensity;
+	//android_noncompatScaledDensity=dm.noncompatScaledDensity;
+		
+	android_width2 = getWindowManager().getDefaultDisplay().getWidth();
+	android_height2 = getWindowManager().getDefaultDisplay().getHeight();
     }
     
 	/* (non-Javadoc)
@@ -82,13 +127,62 @@ public class DisplayResolution extends Activity {
 		// TODO Auto-generated method stub
 		super.onRestart();
 	}	
+
+//huyanwei {
+    private String readLine(String filename) throws IOException 
+    {
+		         BufferedReader reader = new BufferedReader(new FileReader(filename), 256);
+		         try {
+		             return reader.readLine();
+		         } finally {
+		             reader.close();
+		         }
+    }
+//huyanwei }
+
+//huyanwei {
+    public String getCurrentPackageName()
+        {
+                String pacakge_name = "" ;
+		/*
+                try {
+                        String fileName = "/proc/self/cmdline";
+                        FileInputStream fin = new FileInputStream(fileName);
+                        int length = fin.available();
+                        byte[] buffer = new byte[length];
+                        fin.read(buffer);
+                        //pacakge_name = EncodingUtils.getString(buffer, "UTF-8");
+                        pacakge_name = new String(buffer);
+                        fin.close();
+                        } catch (FileNotFoundException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                        } catch (IOException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                }
+		*/
+
+               	try {
+			//int pid = android.os.Process.myPid();
+			//pacakge_name=readLine("/proc/"+pid+"/cmdline");
+			pacakge_name=readLine("/proc/self/cmdline");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+                return pacakge_name;
+        }
+//huyanwei }
+
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onResume()
 	 */
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub		
-        
+
+	String pacakge_name = getCurrentPackageName();
+
         res = DisplayNative.get_framebuffer_info_init();
 
 	if(res == 0)
@@ -98,23 +192,26 @@ public class DisplayResolution extends Activity {
 		height = DisplayNative.get_framebuffer_info_height();
 	}
 	res = DisplayNative.get_framebuffer_info_deinit();
-        
+
         //m_width_value.setText(width.toString());
         //m_height_value.setText(height.toString());
 
 	if(width > 0)
-	        m_width_value.setText(Integer.toString(width)+"("+Integer.toString(android_width)+")");
+	        m_width_value.setText("K["+Integer.toString(width)+"]"+" M["+Integer.toString(android_width)+"]"+" D["+Integer.toString(android_width2)+"]");
 	else
-		m_width_value.setText(this.getResources().getString(R.string.unknown)+"("+Integer.toString(android_width)+")");
+		m_width_value.setText("K["+this.getResources().getString(R.string.unknown)+"]"+" M["+Integer.toString(android_width)+"]"+" D["+Integer.toString(android_width2)+"]");
 
 	if(height > 0)
-		m_height_value.setText(Integer.toString(height)+"("+Integer.toString(android_height)+")");
+		m_height_value.setText("K["+Integer.toString(height)+"]"+" M["+Integer.toString(android_height)+"]"+" D["+Integer.toString(android_height2)+"]");
 	else
-		m_height_value.setText(this.getResources().getString(R.string.unknown)+"("+Integer.toString(android_height)+")");
+		m_height_value.setText("K["+this.getResources().getString(R.string.unknown)+"]"+" M["+Integer.toString(android_height)+"]"+" D["+Integer.toString(android_height2)+"]");
        
+	m_density_value.setText("[PackageName="+pacakge_name+"]"+"{"+Float.toString(android_density)+"/"+Integer.toString(android_density_dpi)+"/"+Float.toString(android_scaledDensity)+"/"+Float.toString(android_noncompatDensity)+"/"+Float.toString(android_noncompatScaledDensity)+"}");
+
 		super.onResume();
 	}
-	
+
+
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onPause()
 	 */

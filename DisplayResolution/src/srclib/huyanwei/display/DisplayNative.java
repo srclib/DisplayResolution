@@ -5,9 +5,9 @@ public class DisplayNative {
 	{
 		System.loadLibrary("display_jni");
 	};	
-	static native int get_framebuffer_info_init();
-	static native int get_framebuffer_info_width();
-	static native int get_framebuffer_info_height();
-	static native int get_framebuffer_info(int[] width,int[] height);
-	static native int get_framebuffer_info_deinit();
+	public static native int get_framebuffer_info_init();
+	public static native int get_framebuffer_info_width();
+	public static native int get_framebuffer_info_height();
+	public static native int get_framebuffer_info(int[] width,int[] height);
+	public static native int get_framebuffer_info_deinit();
 }
